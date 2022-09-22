@@ -1,0 +1,246 @@
+@import "antd/dist/antd.css";
+
+@font-face {
+  font-family: "Josefin";
+  src: url("../font/JosefinSans-BoldItalic.ttf");
+}
+@font-face {
+  font-family: "Planet";
+  src: url("../font/ethnocentric\ rg\ it.ttf");
+}
+@font-face {
+  font-family: "Nature";
+  src: url("../font/Neutronium.ttf");
+}
+/* 样式的重置 */
+body,
+html,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+ul,
+ol,
+li,
+dl,
+dt,
+dd,
+header,
+menu,
+section,
+p,
+input,
+td,
+th,
+ins {
+  padding: 0;
+  margin: 0;
+}
+
+ul,
+ol,
+li {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: #666;
+}
+
+a:hover {
+  color: #666;
+  text-decoration: underline;
+}
+
+i,
+em {
+  font-style: normal;
+}
+
+input,
+textarea,
+button,
+select,
+a {
+  outline: none;
+  border: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+img {
+  border: none;
+  vertical-align: middle;
+}
+
+/* 全局样式 */
+
+/* 金色标签 */
+.content-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 10px;
+  text-align: center;
+  color: #be9656;
+}
+/* 主标题 */
+.content-subtitle {
+  font-family: "Josefin";
+  text-align: center;
+  font-size: 30px;
+  font-weight: 600;
+}
+/* 金色线  */
+.content-line1 {
+  margin: 20px auto;
+  width: 10%;
+  height: 1px;
+  border-top: solid #be9656 2px;
+}
+.content-line2 {
+  margin: 20px auto;
+  width: 10%;
+  height: 1px;
+  border-top: solid #000 1px;
+}
+/* 文字 */
+.content-text {
+  font-family: Lora, Georgia, serif;
+  font-size: 16px;
+  text-align: center;
+  color: rgb(68, 68, 68, 0.8);
+}
+
+.content-sstitle {
+  color: #999999;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.hide {
+  display: none;
+}
+
+.comment-action {
+  padding-left: 8px;
+  cursor: "auto";
+}
+
+[class*="-col-rtl"] .comment-action {
+  padding-right: 8px;
+  padding-left: 0;
+}
+
+.ant-comment-inner {
+  display: flex;
+  width: 80%;
+  margin: 0 auto;
+  padding: 16px 0;
+  border-bottom: 1px solid #887e7e4f;
+}
+
+.img-text{
+  color: #fff;
+  font-size:46px;
+  font-family: Planet;
+  font-weight: 300;
+  letter-spacing: 18px;
+}
+.img-subtext{
+  color: #fff;
+  font-size:26px;
+  font-family: Nature;
+  font-weight: 300;
+  letter-spacing: 6px;
+}
+
+/* markdown样式 */
+.bread-div{
+  padding: .5rem;
+  border-bottom:1px solid #eee;
+  background-color: #e1f0ff;
+}
+.detailed-title{
+  font-size: 1.8rem;
+  text-align: center;
+  padding: 1rem;
+}
+.center{
+  text-align: center;
+}
+.detailed-content{
+  padding: 1.3rem;
+  font-size: 1rem;
+}
+pre{
+  display: block;
+  background-color:#f3f3f3;
+   padding: .5rem !important;
+   overflow-y: auto;
+   font-weight: 300;
+   font-family: Menlo, monospace;
+   border-radius: .3rem;
+}
+pre{
+  background-color: #283646 !important;
+}
+pre >code{
+  border:0px !important;
+  background-color: #283646 !important;
+  color:#FFF;
+
+}
+code {
+  display: inline-block ;
+  background-color:#f3f3f3;
+  border:1px solid #fdb9cc;
+  border-radius:3px;
+  font-size: 12px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color:#4f4f4f;
+  margin: 0px 3px;
+
+}
+
+.title-anchor{
+  color:#888 !important;
+  padding:4px !important;
+  margin: 0rem !important;
+  height: auto !important;
+  line-height: 1.2rem !important;
+  font-size: .7rem !important;
+  border-bottom: 1px dashed #eee;
+  overflow: hidden;
+  text-overflow:ellipsis;
+  white-space: nowrap;
+}
+.active{
+  color:rgb(30, 144, 255) !important;
+}
+
+iframe{
+  height: 34rem;
+}
+.detailed-content  img{
+  width: 100%;
+  border:1px solid #f3f3f3;
+}
+.title-level3{
+  display: none !important;
+}
+.ant-anchor-link-title{
+  font-size: 12px !important;
+}
+.ant-anchor-wrapper{
+  padding: 5px !important;
+}
+
