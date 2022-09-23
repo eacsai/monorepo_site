@@ -1,26 +1,28 @@
-import React, { memo, useState, useMemo, useCallback } from "react";
-import { Card, Input, Button, Spin, message } from "antd";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { LoginStyle } from "./style";
-import setAuthToken from "../../utils/setAuthToken.js";
+import React, { memo, useState, useMemo, useCallback } from 'react';
+import { Card, Input, Button, Spin, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { LoginStyle } from './style';
+import setAuthToken from '../../utils/setAuthToken.js';
 
 export default memo(function Login(props: any) {
-  const [userName, setUserName] = useState("");
-  const [password, setPassword] = useState("");
+  const [userName, setUserName] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   const checkLogin = useCallback(() => {
     setIsLoading(true);
+    setUserName('');
+    setPassword('');
     if (!userName) {
-      message.error("用户名不能为空");
+      message.error('用户名不能为空');
       setTimeout(() => {
         setIsLoading(false);
       });
       return false;
     } else if (!password) {
-      message.error("密码不能为空");
+      message.error('密码不能为空');
       setTimeout(() => {
         setIsLoading(false);
       });
@@ -28,23 +30,23 @@ export default memo(function Login(props: any) {
     }
     const dataProps = {
       userName: userName,
-      password: password,
+      password: password
     };
     axios({
-      method: "post",
-      url: "http://localhost:7001/admin/checkLogin",
+      method: 'post',
+      url: 'http://localhost:7001/admin/checkLogin',
       data: dataProps,
-      withCredentials: true,
+      withCredentials: true
     }).then((res) => {
-      console.log(res.data.data === "登录成功");
+      console.log(res.data.data === '登录成功');
       setIsLoading(false);
-      if (res.data.data === "登录成功") {
+      if (res.data.data === '登录成功') {
         const { token } = res.data;
-        sessionStorage.setItem("jwToken", token);
+        sessionStorage.setItem('jwToken', token);
         setAuthToken(token);
-        navigate("/index");
+        navigate('/index');
       } else {
-        message.error("用户名密码错误");
+        message.error('用户名密码错误');
       }
     });
 
@@ -55,13 +57,13 @@ export default memo(function Login(props: any) {
   const signUp = useCallback(() => {
     setIsLoading(true);
     if (!userName) {
-      message.error("用户名不能为空");
+      message.error('用户名不能为空');
       setTimeout(() => {
         setIsLoading(false);
       });
       return false;
     } else if (!password) {
-      message.error("密码不能为空");
+      message.error('密码不能为空');
       setTimeout(() => {
         setIsLoading(false);
       });
@@ -69,25 +71,25 @@ export default memo(function Login(props: any) {
     }
     const dataProps = {
       userName: userName,
-      password: password,
+      password: password
     };
     axios({
-      method: "post",
-      url: "http://localhost:7001/admin/signUp",
+      method: 'post',
+      url: 'http://localhost:7001/admin/signUp',
       data: dataProps,
-      withCredentials: true,
+      withCredentials: true
     }).then((res) => {
       console.log(res);
       setIsLoading(false);
-      if (res.data.data === "注册成功") {
+      if (res.data.data === '注册成功') {
         const { token } = res.data;
-        sessionStorage.setItem("jwToken", token);
+        sessionStorage.setItem('jwToken', token);
         setAuthToken(token);
-        navigate("/index");
-      } else if(res.data.data === "该账号已注册") {
-        message.error("该账号已注册");
-      } else{
-        message.error("注册失败");
+        navigate('/index');
+      } else if (res.data.data === '该账号已注册') {
+        message.error('该账号已注册');
+      } else {
+        message.error('注册失败');
       }
     });
 
@@ -153,25 +155,19 @@ export default memo(function Login(props: any) {
   return (
     <LoginStyle>
       <div className="container">
-        <div className={isLogin ? "dynamic" : "dynamic active"}>
+        <div className={isLogin ? 'dynamic' : 'dynamic active'}>
           {isLogin && LoginCard}
           {!isLogin && RegisterCard}
         </div>
         <div className="choose">
-          <div
-            className={!isLogin ? "login-question" : "login-question change"}
-          >
+          <div className={!isLogin ? 'login-question' : 'login-question change'}>
             <button className="login-button" onClick={change}>
-              {"已有账号，直接登陆"}
+              {'已有账号，直接登陆'}
             </button>
           </div>
-          <div
-            className={
-              isLogin ? "register-question" : "register-question change"
-            }
-          >
+          <div className={isLogin ? 'register-question' : 'register-question change'}>
             <button className="register-button" onClick={change}>
-              {"没有账号，点击注册"}
+              {'没有账号，点击注册'}
             </button>
           </div>
         </div>
