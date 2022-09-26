@@ -6,9 +6,9 @@ import UserAvatar from './avatar/index';
 import servicePath from '../../config/apiUrl';
 const { confirm } = Modal;
 
-export default memo(function AddPic(props) {
+export default memo(function AddPic() {
   const [list, setList] = useState([]);
-  const [imgUrl, setImgUrl] = useState(null);
+  const [imgUrl, setImgUrl] = useState<null | string>(null);
   useEffect(() => {
     getList();
   }, []);
@@ -132,7 +132,7 @@ export default memo(function AddPic(props) {
                     delArticle(item.id);
                   }}
                 >
-                  删除{' '}
+                  删除
                 </Button>
               </Col>
             </Row>

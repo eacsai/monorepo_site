@@ -1,19 +1,40 @@
-import React, { memo, useState, useRef, useEffect } from 'react';
+import React, { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Upload, message } from 'antd';
 // import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
 import { AvatarStyle } from './style';
 import servicePath from '../../../config/apiUrl';
 import axios from 'axios';
-
+import { useThrottle } from '../../../hooks/useThrottle';
+import { useUpdateEffect } from '../../../hooks/useUpdateEffect';
 export default memo(function UserAvatar(props: any) {
   const { imgUrl, setImgUrl } = props;
   const canvasRef = useRef<any>();
   const imageRef = useRef<any>();
+  const direction = useRef<any>();
   const [loading, setLoading] = useState(false);
-  const [mouseState, setMouseState] = useState<any>();
-  useEffect(() => {
-    setImgUrl('http://my-site-avatar.oss-cn-beijing.aliyuncs.com/1663899453292wallhaven-e7jj6r.jpeg');
-  }, []);
+  const [showCutModal, setShowCutModal] = useState(false);
+  const [file, setFile] = useState({ name: '' });
+  const [times, setTimes] = useState(1);
+  const [dataUrl, setDataUrl] = useState();
+  const [cutDataUrl, setCutDataUrl] = useState('');
+  const [style, setStyle] = useState<any>({
+    left: 100,
+    top: 100,
+    width: 100,
+    height: 100
+  });
+  // 初始数据， 因为不需要重新render 所以用 useRef
+  const oriPos = useRef({
+    top: 0, // 元素的坐标
+    left: 0,
+    cX: 0, // 鼠标的坐标
+    cY: 0
+  });
+  const isDown = useRef(false);
+
+  const avatarRef = useRef<any>();
+  const points = useMemo(() => ['e', 'w', 's', 'n', 'ne', 'nw', 'se', 'sw'], []);
+
   const beforeUpload = (file: any) => {
     const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
     if (!isJpgOrPng) {
@@ -25,30 +46,16 @@ export default memo(function UserAvatar(props: any) {
       message.error('Image must smaller than 10MB!');
       return;
     }
+    setShowCutModal(true);
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    console.log('start1');
     reader.onloadend = (e: any) => {
       const base64 = e.target.result;
-      console.log(base64);
-      const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
-      axios({
-        method: 'post',
-        url: servicePath.addPic,
-        withCredentials: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        data: { filename: file.name, file: base64Data }
-      })
-        .then((result) => {
-          setImgUrl(result.data.result.url);
-        })
-        .catch((error) => {
-          console.log(error.message);
-        });
+      setDataUrl(base64);
+      setFile(file);
     };
     return isJpgOrPng && isLt10M;
   };
-
   const uploadButton = (
     <div>
       {/* {loading ? <LoadingOutlined /> : <PlusOutlined />} */}
@@ -62,90 +69,248 @@ export default memo(function UserAvatar(props: any) {
       return;
     }
   };
-  const handleMouseDown = (event: any) => {
-    setMouseState({
-      startX: event.clientX,
-      startY: event.clientY,
-      startDrag: true
-    });
-  };
 
-  const handleMouseMove = (event: any) => {
-    if (mouseState?.startDrag) {
-      drawImage(
-        event.clientX - mouseState.startX + mouseState.lastX,
-        event.clientY - mouseState.startY + mouseState.lastY
-      );
-    }
-  };
-
-  const handleMouseUp = (event: any) => {
-    setMouseState((pre: any) => {
-      return {
-        lastX: event.clientX - pre.startX + pre.lastX,
-        lastY: event.clientY - pre.startY + pre.lastY,
-        startDrag: false
-      };
-    });
-  };
-
-  const drawImage = (left = mouseState.lastX, top = mouseState.lastY) => {
-    let image = imageRef.current;
-    console.log('image', image);
-    let canvas = canvasRef.current;
-    let ctx = canvas.getContext('2d');
+  const drawImage = () => {
+    const image = imageRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     let imageWidth = image.width;
     let imageHeight = image.height;
     if (imageWidth > imageHeight) {
-      let scale = canvas.width / canvas.height;
-      imageWidth = canvas.width * mouseState.times;
-      imageHeight = imageHeight * scale * mouseState.times;
+      const scale = canvas.width / canvas.height;
+      imageWidth = canvas.width * times;
+      imageHeight = imageHeight * scale * times;
     } else {
-      let scale = canvas.height / canvas.width;
-      imageHeight = canvas.height * mouseState.times;
-      imageWidth = imageWidth * scale * mouseState.times;
+      const scale = canvas.height / canvas.width;
+      imageHeight = canvas.height * times;
+      imageWidth = imageWidth * scale * times;
     }
-    console.log(image.width);
-    console.log('x', (canvas.width - imageWidth) / 2 + left);
-    console.log('y', (canvas.height - imageWidth) / 2 + top);
-    console.log('width', imageWidth);
-    console.log('height', imageHeight);
     ctx.drawImage(
       image,
-      (canvas.width - imageWidth) / 2 + left,
-      (canvas.height - imageHeight) / 2 + top,
+      (canvas.width - imageWidth) / 2,
+      (canvas.height - imageHeight) / 2,
       imageWidth,
       imageHeight
     );
   };
 
+  const handleCutUrl = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    console.log('===', style.left, style.top, style.width, style.height);
+    const imageData = ctx.getImageData(style.left, style.top, style.width, style.height);
+    const avatarCanvas = document.createElement('canvas');
+    avatarCanvas.width = style.width;
+    avatarCanvas.height = style.height;
+    const avatarCtx = avatarCanvas.getContext('2d');
+    avatarCtx.putImageData(imageData, 0, 0);
+    avatarRef.current.src = avatarCanvas.toDataURL();
+    setCutDataUrl(avatarCanvas.toDataURL());
+  }, [style]);
+  const confirm = useCallback(() => {
+    const base64Data = cutDataUrl.replace(/^data:image\/\w+;base64,/, '');
+    axios({
+      method: 'post',
+      url: servicePath.addPic,
+      withCredentials: true,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      data: { filename: file.name, file: base64Data }
+    })
+      .then((result) => {
+        setImgUrl(result.data.result.url);
+      })
+      .catch((error) => {
+        console.log(error.message);
+      })
+      .finally(() => {
+        closeModal();
+      });
+  }, [file, setImgUrl, cutDataUrl]);
+  function transform(direction: any, oriPos: any, e: any) {
+    const style = { ...oriPos.current };
+    const canvas = canvasRef.current;
+    const offsetX = e.clientX - oriPos.current.cX;
+    const offsetY = e.clientY - oriPos.current.cY;
+    // 元素当前位置 + 偏移量
+    const top = oriPos.current.top + offsetY;
+    const left = oriPos.current.left + offsetX;
+    switch (direction.current) {
+      // 拖拽移动
+      case 'move':
+        // 限制必须在这个范围内移动 画板的高度-元素的高度
+        style.top = Math.max(0, Math.min(top, canvas.height - style.height));
+        style.left = Math.max(0, Math.min(left, canvas.width - style.width));
+        break;
+      // 东
+      case 'e':
+        // 向右拖拽添加宽度
+        style.width += offsetX;
+        return style;
+      // 西
+      case 'w':
+        // 增加宽度、位置同步左移
+        style.width -= offsetX;
+        style.left += offsetX;
+        return style;
+      // 南
+      case 's':
+        style.height += offsetY;
+        return style;
+      // 北
+      case 'n':
+        style.height -= offsetY;
+        style.top += offsetY;
+        break;
+      // 东北
+      case 'ne':
+        style.height -= offsetY;
+        style.top += offsetY;
+        style.width += offsetX;
+        break;
+      // 西北
+      case 'nw':
+        style.height -= offsetY;
+        style.top += offsetY;
+        style.width -= offsetX;
+        style.left += offsetX;
+        break;
+      // 东南
+      case 'se':
+        style.height += offsetY;
+        style.width += offsetX;
+        break;
+      // 西南
+      case 'sw':
+        style.height += offsetY;
+        style.width -= offsetX;
+        style.left += offsetX;
+        break;
+    }
+    return style;
+  }
+  const handleDragStart = useCallback(
+    (dir: any, e: any) => {
+      console.log('开始拖拽');
+      const img = new Image();
+      img.src = '';
+      e.dataTransfer.setDragImage(img, 0, 0);
+      // 阻止事件冒泡
+      e.stopPropagation();
+      // 保存方向。
+      direction.current = dir;
+      isDown.current = true;
+      // 然后鼠标坐标是
+      const cY = e.clientY; // clientX 相对于可视化区域
+      const cX = e.clientX;
+      oriPos.current = {
+        ...style,
+        cX,
+        cY
+      };
+      console.log('oriPos', oriPos.current);
+    },
+    [style]
+  );
+  const onMouseMove = useCallback((e: any) => {
+    console.log('mouseMove');
+    if (!isDown.current) return;
+    // 判断鼠标是否按住
+    const newStyle = transform(direction, oriPos, e);
+    setStyle(newStyle);
+  }, []);
+  const handleDragEnd = useCallback(
+    (e: any) => {
+      console.log('结束拖拽');
+      isDown.current = false;
+      handleCutUrl();
+    },
+    [handleCutUrl]
+  );
+  const bigger = () => {
+    setTimes((pre) => pre + 0.1);
+  };
+  const smaller = () => {
+    setTimes((pre) => pre - 0.1);
+  };
+  const closeModal = () => {
+    setShowCutModal(false);
+  };
+
+  const Drawing = useMemo(() => {
+    // const data = useState()
+    return (
+      <div
+        className="drawing-item"
+        onDragStart={(e) => handleDragStart('move', e)}
+        onDragOver={onMouseMove}
+        onDragEnd={handleDragEnd}
+        onDrop={handleDragEnd}
+        onDragLeave={() => console.log('dragleave')}
+        draggable="true"
+        style={style}
+      >
+        {points.map((item, index) => (
+          <div
+            key={index}
+            onDragStart={(e) => handleDragStart(item, e)}
+            onDragOver={onMouseMove}
+            onDragEnd={handleDragEnd}
+            onDrop={handleDragEnd}
+            onDragLeave={() => console.log('dragleave')}
+            draggable="true"
+            className={`control-point point-${item}`}
+          ></div>
+        ))}
+      </div>
+    );
+  }, [handleDragStart, style, points, onMouseMove, handleDragEnd]);
+
+  const CutModal = useMemo(() => {
+    return (
+      <>
+        <div className="cut-modal">
+          <div className="show-picture">
+            <div className="cut-picture">
+              <div style={{ position: 'relative' }}>
+                <canvas
+                  ref={canvasRef}
+                  width="300px"
+                  height="300px"
+                  style={{ border: '2px dashed #632B21' }}
+                ></canvas>
+                {Drawing}
+              </div>
+              <div className="btn-group">
+                <button type="button" className="btn btn-primary" onClick={bigger}>
+                  变大
+                </button>
+                <button type="button" className="btn btn-primary" onClick={smaller}>
+                  变小
+                </button>
+                <button type="button" className="btn btn-primary" onClick={confirm}>
+                  剪切
+                </button>
+              </div>
+            </div>
+            <div className="pre-picture">
+              <img ref={avatarRef} alt="" style={{ width: '80%', height: '80%' }} />
+            </div>
+          </div>
+        </div>
+        <div className="mask" onClick={closeModal}></div>
+      </>
+    );
+  }, [Drawing, confirm]);
+  useUpdateEffect(() => {
+    showCutModal && drawImage();
+  }, [times, dataUrl, showCutModal]);
+  useUpdateEffect(() => {
+    handleCutUrl();
+  }, [times]);
   return (
     <AvatarStyle>
-      <div
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        style={{ position: 'relative' }}
-      >
-        <canvas
-          ref={canvasRef}
-          width="300px"
-          height="300px"
-          style={{ border: '2px dashed #632B21' }}
-        ></canvas>
-        <div
-          style={{
-            width: 100,
-            height: 100,
-            backgroundColor: 'blue',
-            opacity: 0.3,
-            position: 'absolute',
-            left: 100,
-            top: 100
-          }}
-        ></div>
-      </div>
+      {showCutModal && CutModal}
       <Upload
         name="avatar"
         listType="picture-card"
@@ -154,12 +319,9 @@ export default memo(function UserAvatar(props: any) {
         beforeUpload={beforeUpload}
         onChange={handleChange}
       >
-        {imgUrl ? (
-          <img ref={imageRef} src={imgUrl} alt="avatar" style={{ width: '100%', height: '100%' }} />
-        ) : (
-          uploadButton
-        )}
+        {imgUrl ? <img alt="avatar" src={imgUrl} style={{ width: '100%', height: '100%' }} /> : uploadButton}
       </Upload>
+      <img ref={imageRef} src={dataUrl} alt="avatar" style={{ width: '300px', visibility: 'hidden' }} />
     </AvatarStyle>
   );
 });
