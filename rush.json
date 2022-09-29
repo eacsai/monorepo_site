@@ -403,6 +403,11 @@
       "packageName": "blog_site",
       "projectFolder": "apps/blog_site",
       "reviewCategory": "production"
+    },
+    {
+      "packageName": "@rushapp/hooks",
+      "projectFolder": "libraries/hooks",
+      "reviewCategory": "production"
     }
   ]
 }

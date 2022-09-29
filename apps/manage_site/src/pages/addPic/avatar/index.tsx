@@ -8,9 +8,13 @@ import { useThrottle } from '../../../hooks/useThrottle';
 import { useUpdateEffect } from '../../../hooks/useUpdateEffect';
 export default memo(function UserAvatar(props: any) {
   const { imgUrl, setImgUrl } = props;
+  const rightRef = useRef(0);
   const canvasRef = useRef<any>();
   const imageRef = useRef<any>();
   const direction = useRef<any>();
+  const showCutRef = useRef<any>();
+  const imageWidth = useRef(0);
+  const imageHeight = useRef(0);
   const [loading, setLoading] = useState(false);
   const [showCutModal, setShowCutModal] = useState(false);
   const [file, setFile] = useState({ name: '' });
@@ -75,27 +79,36 @@ export default memo(function UserAvatar(props: any) {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let imageWidth = image.width;
-    let imageHeight = image.height;
-    if (imageWidth > imageHeight) {
+    imageWidth.current = image.width;
+    imageHeight.current = image.height;
+    if (imageWidth.current > imageHeight.current) {
       const scale = canvas.width / canvas.height;
-      imageWidth = canvas.width * times;
-      imageHeight = imageHeight * scale * times;
+      imageWidth.current = canvas.width * times;
+      imageHeight.current = imageHeight.current * scale * times;
     } else {
       const scale = canvas.height / canvas.width;
-      imageHeight = canvas.height * times;
-      imageWidth = imageWidth * scale * times;
+      imageHeight.current = canvas.height * times;
+      imageWidth.current = imageWidth.current * scale * times;
     }
+    setStyle({
+      left: (canvas.width - imageWidth.current) / 2,
+      top: (canvas.height - imageHeight.current) / 2,
+      width: imageWidth.current,
+      height: imageHeight.current
+    });
     ctx.drawImage(
       image,
-      (canvas.width - imageWidth) / 2,
-      (canvas.height - imageHeight) / 2,
-      imageWidth,
-      imageHeight
+      (canvas.width - imageWidth.current) / 2,
+      (canvas.height - imageHeight.current) / 2,
+      imageWidth.current,
+      imageHeight.current
     );
   };
 
   const handleCutUrl = useCallback(() => {
+    const showCanvas = showCutRef.current;
+    const showCtx = showCanvas.getContext('2d');
+    showCtx.clearRect(0, 0, showCanvas.width, showCanvas.height);
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     console.log('===', style.left, style.top, style.width, style.height);
@@ -106,6 +119,14 @@ export default memo(function UserAvatar(props: any) {
     const avatarCtx = avatarCanvas.getContext('2d');
     avatarCtx.putImageData(imageData, 0, 0);
     avatarRef.current.src = avatarCanvas.toDataURL();
+    showCtx.drawImage(
+      avatarRef.current,
+      showCanvas.width / 2 - avatarRef.current.width,
+      showCanvas.height / 2 - avatarRef.current.height,
+      avatarRef.current.width * 2,
+      avatarRef.current.height * 2
+    );
+
     setCutDataUrl(avatarCanvas.toDataURL());
   }, [style]);
   const confirm = useCallback(() => {
@@ -135,32 +156,41 @@ export default memo(function UserAvatar(props: any) {
     // 元素当前位置 + 偏移量
     const top = oriPos.current.top + offsetY;
     const left = oriPos.current.left + offsetX;
+    console.log('wqwwqw===', (canvas.height + imageHeight.current) / 2 - style.width);
+    //获取convas内部图片宽高
     switch (direction.current) {
       // 拖拽移动
       case 'move':
+        console.log('===', (canvas.height + imageHeight.current) / 2 - style.width);
         // 限制必须在这个范围内移动 画板的高度-元素的高度
-        style.top = Math.max(0, Math.min(top, canvas.height - style.height));
-        style.left = Math.max(0, Math.min(left, canvas.width - style.width));
+        style.top = Math.max(
+          (canvas.height - imageHeight.current) / 2,
+          Math.min(top, (canvas.height + imageHeight.current) / 2 - style.height)
+        );
+        style.left = Math.max(0, Math.min(left, imageWidth.current - style.width));
         break;
       // 东
       case 'e':
         // 向右拖拽添加宽度
-        style.width += offsetX;
+        style.width = Math.min(imageWidth.current, style.width + offsetX);
         return style;
       // 西
       case 'w':
         // 增加宽度、位置同步左移
-        style.width -= offsetX;
+        style.width = Math.min(imageWidth.current, style.width - offsetX);
         style.left += offsetX;
         return style;
       // 南
       case 's':
-        style.height += offsetY;
+        style.height = Math.min(style.height + offsetY, imageHeight.current);
         return style;
       // 北
       case 'n':
-        style.height -= offsetY;
-        style.top += offsetY;
+        style.height = Math.min(style.height - offsetY, imageHeight.current);
+        style.top = Math.max(
+          (canvas.height - imageHeight.current) / 2,
+          Math.min(top + offsetY, (canvas.height + imageHeight.current) / 2 - style.height)
+        );
         break;
       // 东北
       case 'ne':
@@ -219,14 +249,10 @@ export default memo(function UserAvatar(props: any) {
     const newStyle = transform(direction, oriPos, e);
     setStyle(newStyle);
   }, []);
-  const handleDragEnd = useCallback(
-    (e: any) => {
-      console.log('结束拖拽');
-      isDown.current = false;
-      handleCutUrl();
-    },
-    [handleCutUrl]
-  );
+  const handleDragEnd = useCallback((e: any) => {
+    console.log('结束拖拽');
+    isDown.current = false;
+  }, []);
   const bigger = () => {
     setTimes((pre) => pre + 0.1);
   };
@@ -294,7 +320,8 @@ export default memo(function UserAvatar(props: any) {
               </div>
             </div>
             <div className="pre-picture">
-              <img ref={avatarRef} alt="" style={{ width: '80%', height: '80%' }} />
+              <img ref={avatarRef} alt="" style={{ visibility: 'hidden' }} />
+              <canvas ref={showCutRef} width="600px" height="600px"></canvas>
             </div>
           </div>
         </div>
@@ -308,6 +335,9 @@ export default memo(function UserAvatar(props: any) {
   useUpdateEffect(() => {
     handleCutUrl();
   }, [times]);
+  useUpdateEffect(() => {
+    handleCutUrl();
+  }, [style]);
   return (
     <AvatarStyle>
       {showCutModal && CutModal}

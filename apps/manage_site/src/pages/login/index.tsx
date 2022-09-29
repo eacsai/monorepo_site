@@ -3,7 +3,7 @@ import { Card, Input, Button, Spin, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LoginStyle } from './style';
-import setAuthToken from '../../utils/setAuthToken.js';
+import setAuthToken from '../../utils/setAuthToken';
 
 export default memo(function Login(props: any) {
   const [userName, setUserName] = useState('');
