@@ -82,7 +82,7 @@ export default memo(function Detail() {
   const tocify = new Tocify();
   renderer.heading = function (text, level) {
     const anchor = tocify.add(text, level);
-    return `<a id="/pages/detail/${anchor}" href="#/pages/detail/${anchor}" class="anchor-fix"><h${level}>${text}</h${level}></a>\n`;
+    return `<a id="/pages/detail/${anchor}" href="#/pages/detail/${anchor}" className="anchor-fix"><h${level}>${text}</h${level}></a>\n`;
   };
   Marked.setOptions({
     renderer: renderer,
