@@ -34,7 +34,7 @@ export default memo(function Login(props: any) {
     };
     axios({
       method: 'post',
-      url: 'http://localhost:7001/admin/checkLogin',
+      url: 'http://103.79.78.232:7001/admin/checkLogin',
       data: dataProps,
       withCredentials: true
     }).then((res) => {

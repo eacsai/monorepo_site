@@ -12,14 +12,37 @@ export const AvatarStyle = styled.div`
   }
   .drawing-item {
     cursor: move;
-    width: 100px;
-    height: 100px;
     background-color: transparent;
     position: absolute;
-    top: 100px;
-    left: 100px;
-    border: 1px solid skyblue;
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    border: 3px solid skyblue;
     box-sizing: border-box;
+    box-shadow: 0px 0px 0px 1000px #57505066;
+  }
+  .drawing-item::before {
+    content: '';
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    width: 100%;
+    height: 30%;
+    border-top: 1px solid skyblue;
+    border-bottom: 1px solid skyblue;
+  }
+  .drawing-item::after {
+    content: '';
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+    width: 30%;
+    height: 100%;
+    border-left: 1px solid skyblue;
+    border-right: 1px solid skyblue;
   }
   .control-point {
     position: absolute;
@@ -95,6 +118,12 @@ export const AvatarStyle = styled.div`
   .anticon-plus {
     color: #fff;
   }
+  .cut-picture {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
   .cut-modal {
     position: fixed;
     left: 50%;
@@ -110,7 +139,7 @@ export const AvatarStyle = styled.div`
     width: 100vw;
     height: 100vh;
     z-index: 9;
-    background-color: #00000094;
+    background-color: #000000ba;
   }
   .show-picture {
     display: flex;
