@@ -1,15 +1,6 @@
 import styled from 'styled-components';
 
-export const AvatarStyle = styled.div`
-  margin: 100px;
-  .drawing-wrap {
-    width: 500px;
-    height: 500px;
-    border: 1px solid red;
-    position: relative;
-    top: 100px;
-    left: 100px;
-  }
+export const DragStyle = styled.div`
   .drawing-item {
     cursor: move;
     background-color: transparent;
@@ -104,58 +95,10 @@ export const AvatarStyle = styled.div`
     margin-left: -1px;
     margin-top: 1px;
   }
-  .ant-upload {
-    background-color: #a0cdf7;
-  }
-  .ant-upload.ant-upload-select-picture-card {
-    background-color: transparent;
-    border: 1px dashed #fff;
-    border-radius: 5%;
-    margin: 20px 0 0 10px;
-  }
-  .anticon-plus {
-    color: #fff;
-  }
   .cut-picture {
     position: relative;
     height: 100%;
     width: 100%;
     overflow: hidden;
-  }
-  .cut-modal {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 99;
-  }
-  .mask {
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 100vw;
-    height: 100vh;
-    z-index: 9;
-    background-color: #000000ba;
-  }
-  .show-picture {
-    display: flex;
-  }
-  .pre-picture {
-    display: flex;
-    width: 500px;
-    height: 500px;
-    justify-content: center;
-    align-items: center;
-  }
-  .show-canvas {
-    position: absolute;
-    top: 0px;
-    z-index: -1;
-    left: 0px;
-  }
-  .preview {
-    font-size: 24px;
   }
 `;
