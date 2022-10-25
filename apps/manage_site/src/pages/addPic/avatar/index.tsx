@@ -87,7 +87,13 @@ export default memo(
         const image = imageRef.current;
         const ctx = canvasRef.current.getContext('2d');
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        ctx.drawImage(image, 0, 0, image.width * times, image.height * times);
+        ctx.drawImage(
+          image,
+          (canvasRef.current.width - image.width) / 2,
+          (canvasRef.current.height - image.height) / 2,
+          image.width * times,
+          image.height * times
+        );
         const cutCtx = showCutRef.current.getContext('2d');
         cutCtx.clearRect(0, 0, showCutRef.current.width, showCutRef.current.height);
         const data = ctx.getImageData(

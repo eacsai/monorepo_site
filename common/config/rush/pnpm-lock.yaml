@@ -88,6 +88,7 @@ importers:
 
   ../../apps/manage_site:
     specifiers:
+      '@ant-design/icons': ^4.7.0
       '@babel/core': ^7.19.0
       '@babel/plugin-proposal-class-properties': ^7.18.6
       '@babel/plugin-proposal-object-rest-spread': ^7.18.9
@@ -96,7 +97,6 @@ importers:
       '@babel/preset-react': ^7.18.6
       '@babel/preset-typescript': ^7.18.6
       '@babel/runtime': ^7.19.0
-      '@rushapp/hooks': workspace:*
       '@ts-stack/markdown': ^1.4.0
       '@types/marked': ^4.0.7
       '@types/node': ^18.7.16
@@ -138,7 +138,7 @@ importers:
       pretty-quick: ^3.1.3
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-router-dom: ^6.3.0
+      react-router-dom: 6.0.1
       sass: ^1.54.9
       sass-loader: ^13.0.2
       spark-md5: ^3.0.2
@@ -154,9 +154,9 @@ importers:
       webpack-dev-server: ^4.10.1
       webpack-merge: ^5.8.0
     dependencies:
+      '@ant-design/icons': 4.7.0_react-dom@18.2.0+react@18.2.0
       '@babel/preset-react': 7.18.6_@babel+core@7.19.1
       '@babel/runtime': 7.19.0
-      '@rushapp/hooks': link:../../libraries/hooks
       '@ts-stack/markdown': 1.4.0
       '@types/spark-md5': 3.0.2
       antd: 4.23.2_react-dom@18.2.0+react@18.2.0
@@ -172,7 +172,7 @@ importers:
       mini-css-extract-plugin: 2.6.1_webpack@5.74.0
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-router-dom: 6.4.0_react-dom@18.2.0+react@18.2.0
+      react-router-dom: 6.0.1_react-dom@18.2.0+react@18.2.0
       spark-md5: 3.0.2
       styled-components: 5.3.5_react-dom@18.2.0+react@18.2.0
       terser-webpack-plugin: 5.3.6_webpack@5.74.0
@@ -7309,6 +7309,12 @@ packages:
     engines: {node: '>=12.0.0'}
     dev: false
 
+  /history/5.3.0:
+    resolution: {integrity: sha512-ZqaKwjjrAYUYfLG+htGaIIZ4nioX2L70ZUMIFysS3xvBsSG4x/n1V6TXV3N8ZYNuFGlDirFg32T7B6WOUPDYcQ==}
+    dependencies:
+      '@babel/runtime': 7.19.0
+    dev: false
+
   /hmac-drbg/1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
     dependencies:
@@ -11411,6 +11417,18 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
+  /react-router-dom/6.0.1_react-dom@18.2.0+react@18.2.0:
+    resolution: {integrity: sha512-fiE+PzFTrof5q8Z/+RHzuiin9/U/q5KY2adlHClwYexbY0DqJnHcC/0U9yv3Amz9em2/bcK7X8mk7+zxB+qhvg==}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+    dependencies:
+      history: 5.3.0
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      react-router: 6.0.1_react@18.2.0
+    dev: false
+
   /react-router-dom/6.4.0_react-dom@18.2.0+react@18.2.0:
     resolution: {integrity: sha512-4Aw1xmXKeleYYQ3x0Lcl2undHR6yMjXZjd9DKZd53SGOYqirrUThyUb0wwAX5VZAyvSuzjNJmZlJ3rR9+/vzqg==}
     engines: {node: '>=14'}
@@ -11421,6 +11439,15 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-router: 6.4.0_react@18.2.0
+    dev: false
+
+  /react-router/6.0.1_react@18.2.0:
+    resolution: {integrity: sha512-O3iab52icFnQaHWONZr50CcjRlf3gx8CCjPQ0YxN8xEuEklRJNgoZSeoYFYz0fLvA4cpnhc306Nd8BYgL4QZrQ==}
+    peerDependencies:
+      react: '>=16.8'
+    dependencies:
+      history: 5.3.0
+      react: 18.2.0
     dev: false
 
   /react-router/6.4.0_react@18.2.0:
