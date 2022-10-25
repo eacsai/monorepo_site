@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useRef, useCallback, useMemo, forwardRef, useImperativeHandle, memo } from 'react';
 import { DragStyle } from './style';
 
 const RefDrag = (props: any) => {
@@ -125,7 +125,20 @@ const RefDrag = (props: any) => {
     [style]
   );
   const points = useMemo(() => ['e', 'w', 's', 'n', 'ne', 'nw', 'se', 'sw'], []);
-
+  const DragModal = useMemo(
+    () => (
+      <div className="drawing-item" onMouseDown={(e) => handleDragStart('move', e)} style={style}>
+        {points.map((item, index) => (
+          <div
+            key={index}
+            onMouseDown={(e) => handleDragStart(item, e)}
+            className={`control-point point-${item}`}
+          ></div>
+        ))}
+      </div>
+    ),
+    [handleDragStart, points, style]
+  );
   return (
     <DragStyle>
       <div
@@ -135,22 +148,15 @@ const RefDrag = (props: any) => {
         onMouseLeave={handleDragEnd}
       >
         {Picture}
-        <div className="drawing-item" onMouseDown={(e) => handleDragStart('move', e)} style={style}>
-          {points.map((item, index) => (
-            <div
-              key={index}
-              onMouseDown={(e) => handleDragStart(item, e)}
-              className={`control-point point-${item}`}
-            ></div>
-          ))}
-        </div>
+        {DragModal}
         {Canvas}
       </div>
     </DragStyle>
   );
 };
-export const Drag = forwardRef((props: any, ref) => {
-  console.log('ref', ref);
-  return <RefDrag {...props} myRef={ref} />;
-});
+export const Drag = memo(
+  forwardRef((props: any, ref) => {
+    return <RefDrag {...props} myRef={ref} />;
+  })
+);
 Drag.displayName = 'Drag';

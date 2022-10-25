@@ -1,17 +1,22 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { List, Row, Col, Modal, message, Button, Avatar, Input } from 'antd';
 import axios from 'axios';
 import { ListStyle } from './style';
 import UserAvatar from './avatar/index';
 import servicePath from '../../config/apiUrl';
+import { FileUploaderClient } from '../../utils/uploaderClient';
+
 const { confirm } = Modal;
 
 export default memo(function AddPic() {
   const [list, setList] = useState([]);
   const [imgUrl, setImgUrl] = useState<null | string>(null);
+  const source = useRef<any>(axios.CancelToken.source()); //add
+  const avatarRef = useRef<any>(null);
   useEffect(() => {
     getList();
   }, []);
+
   //得到图片列表
   const getList = () => {
     axios({
@@ -45,29 +50,35 @@ export default memo(function AddPic() {
   };
   const [text, setText] = useState('');
   const [type, setType] = useState('');
-  const submitPic = () => {
-    axios({
-      method: 'post',
-      url: servicePath.subPic,
-      withCredentials: true,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      data: { picUrl: imgUrl, text, type }
-    })
-      .then((result) => {
-        console.log(result);
-        setText('');
-        setType('');
-        setImgUrl(null);
-        getList();
-      })
-      .catch((error) => {
-        console.log(error.message);
-      });
+  const submitPic: any = async () => {
+    // axios({
+    //   method: 'post',
+    //   url: servicePath.subPic,
+    //   withCredentials: true,
+    //   headers: { 'Access-Control-Allow-Origin': '*' },
+    //   data: { picUrl: imgUrl, text, type }
+    // })
+    //   .then((result) => {
+    //     console.log(result);
+    //     setText('');
+    //     setType('');
+    //     setImgUrl(null);
+    //     getList();
+    //   })
+    //   .catch((error) => {
+    //     console.log(error.message);
+    //   });
+    const blobList = avatarRef.current.getBlobList();
+    for (let i = 0; i < blobList.length; i++) {
+      console.log('blobList[i]', blobList[i]);
+      await blobList[i].uploadFile(blobList[i].blob);
+      console.log(`上传成功图片${i}`);
+    }
   };
   return (
     <ListStyle>
       <div className="picUpload">
-        <UserAvatar setImgUrl={setImgUrl} imgUrl={imgUrl} />
+        <UserAvatar setImgUrl={setImgUrl} imgUrl={imgUrl} ref={avatarRef} />
         <div className="picInput">
           <Input
             value={text}

@@ -1,7 +1,9 @@
 import styled from 'styled-components';
 
 export const AvatarStyle = styled.div`
-  margin: 100px;
+  display: flex;
+  width: 100%;
+  overflow: hidden;
   .drawing-wrap {
     width: 500px;
     height: 500px;
@@ -106,8 +108,13 @@ export const AvatarStyle = styled.div`
   }
   .ant-upload {
     background-color: #a0cdf7;
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
   }
   .ant-upload.ant-upload-select-picture-card {
+    width: 100px;
+    height: 100px;
     background-color: transparent;
     border: 1px dashed #fff;
     border-radius: 5%;
@@ -157,5 +164,61 @@ export const AvatarStyle = styled.div`
   }
   .preview {
     font-size: 24px;
+  }
+  .modal-wrapper {
+    width: 200px;
+    height: 100%;
+    background: hotpink;
+    overflow: hidden;
+    .cut-edit-modal {
+      width: 100%;
+      height: 100px;
+      background-color: lightblue;
+    }
+    .scale-modal {
+      width: 100%;
+      height: 100px;
+      background-color: lightgreen;
+    }
+    .style-modal {
+      width: 100%;
+      height: 100px;
+      background-color: hotpink;
+    }
+  }
+  .image-item {
+    width: 200px;
+    height: 70px;
+    margin: 10px;
+    .image-content {
+      display: flex;
+      width: 100%;
+      height: 80%;
+      .image-show {
+        flex: 1;
+      }
+      .image-text {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 2;
+      }
+      .image-control {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+      }
+    }
+    .image-progress-bar {
+      width: 100%;
+      height: 20%;
+    }
+    .ant-progress {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+    }
   }
 `;

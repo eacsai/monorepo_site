@@ -5,65 +5,21 @@ const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024;
 const DEFAULT_OPTIONS = {
   chunkSize: DEFAULT_CHUNK_SIZE
 };
-let results: any[] = [];
-let startIndex = 0;
-const retryList: any[] = [];
-function createRequest(tasks: any[], pool: number, chunkList: any) {
-  results = [];
-  pool = pool || 5;
-  let together = new Array(pool).fill(null);
-  let index = 0;
-  together = together.map((item, i) => {
-    return new Promise<void>((resolve, reject) => {
-      const run = function run() {
-        if (index >= tasks.length) {
-          resolve();
-          return;
-        }
-        const old_index = index;
-        // 从任务池拿任务，由于index是升级作用域的变量，所以多个Promise共享一个index
-        //这样可以让一个数组里面的任务一次执行
-        const task = tasks[index++];
-        console.log(`开始上传分片${index - 1}`);
-        task(chunkList[index - 1], index - 1 + startIndex)
-          .then((result: any) => {
-            console.log(`上传分片${result}完成`);
-            // 将返回的结果放置在results里面，实现请求数据的集中存储。
-            results[old_index] = result;
-            // 只有在上一个任务执行成功后才会执行一个异步任务
-            run();
-            // this.startNumber += 1;
-          })
-          .catch((e: any) => {
-            console.error(e.e, results.length);
-            if (e.e.message === 'cancle request!') {
-              console.warn(`${e.index} part upload failed`);
-            } else {
-              console.warn(`${e.index} part upload failed`);
-              retryList.push(e.index);
-            }
-            reject(results.length);
-          });
-      };
-      run();
-    });
-  });
-  // 多个promise同时处理，根据pool来限制同一时刻并发请求的个数
-  return Promise.all(together)
-    .then(() => results)
-    .catch((e) => {
-      console.log('eeeeee', e);
-    });
-}
 
 export interface IFileUploaderClientOptions {
   chunkSize: number;
   requestOptions?: {
     retryTimes: number;
-    initFilePartUploadFunc: () => Promise<any>;
-    uploadPartFileFunc: (chunk: Blob, index: number) => Promise<any>;
-    finishFilePartUploadFunc: (md5: string) => Promise<any>;
+    initFilePartUploadFunc: (currentIndex: number) => Promise<any>;
+    uploadPartFileFunc: (chunk: Blob, index: number, currentIndex: number) => Promise<any>;
+    finishFilePartUploadFunc: (md5: string, currentIndex: number) => Promise<any>;
   };
+}
+
+export interface uploadFileProps {
+  file?: Blob;
+  setPersent: (persent: number) => void;
+  currentIndex: number;
 }
 
 export class FileUploaderClient {
@@ -72,12 +28,74 @@ export class FileUploaderClient {
   chunkList: Blob[];
   abort: string;
   tmpList: Blob[];
+  results: any[];
+  startIndex: number;
+  sum: number;
+  currentIndex: number;
+  makePersent: (persent: number) => void;
+  retryList: any[];
   constructor(options: IFileUploaderClientOptions) {
+    console.log('rrrrrrrr');
     this.fileUploaderClientOptions = Object.assign(DEFAULT_OPTIONS, options);
     this.abort = 'upload';
     this.md5 = '';
+    this.results = [];
+    this.startIndex = 0;
+    this.sum = 0;
+    this.retryList = [];
+    this.currentIndex = 0;
+    this.tmpList = [];
   }
-
+  public createRequest(tasks: any[], pool: number, chunkList: any) {
+    this.results = [];
+    pool = pool || 5;
+    let together = new Array(pool).fill(null);
+    let index = 0;
+    together = together.map((item, i) => {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      const that = this;
+      return new Promise<void>((resolve, reject) => {
+        const run = function run() {
+          if (index >= tasks.length) {
+            resolve();
+            return;
+          }
+          const old_index = index;
+          // 从任务池拿任务，由于index是升级作用域的变量，所以多个Promise共享一个index
+          //这样可以让一个数组里面的任务一次执行
+          const task = tasks[index++];
+          console.log(`开始上传分片${index - 1 + that.startIndex}`);
+          task(chunkList[index - 1], index - 1 + that.startIndex, that.currentIndex)
+            .then((result: any) => {
+              console.log(`上传分片${result}完成`, (that.results.length * 100) / that.sum);
+              that.makePersent((that.results.length * 100) / that.sum);
+              // 将返回的结果放置在results里面，实现请求数据的集中存储。
+              that.results[old_index] = result;
+              // 只有在上一个   任务执行成功后才会执行一个异步任务
+              run();
+              // this.startNumber += 1;
+            })
+            .catch((e: any) => {
+              console.error(e.e, that.results.length);
+              if (e.e.message === 'cancle request!') {
+                console.warn(`${e.index} part upload failed`);
+              } else {
+                console.warn(`${e.index} part upload failed`);
+                that.retryList.push(e.index);
+              }
+              reject(that.results.length);
+            });
+        };
+        run();
+      });
+    });
+    // 多个promise同时处理，根据pool来限制同一时刻并发请求的个数
+    return Promise.all(together)
+      .then(() => this.results)
+      .catch((e) => {
+        console.log('eeeeee', e);
+      });
+  }
   /**
    * 将file对象进行切片，然后根据切片计算md5
    * @param file 要上传的文件
@@ -131,16 +149,20 @@ export class FileUploaderClient {
    * @param file 要上传的文件
    * @returns finishFilePartUploadFunc函数Promise resolve的值
    */
-  public async uploadFile(file?: Blob): Promise<any> {
+  public async uploadFile(props: uploadFileProps): Promise<any> {
+    const { file, setPersent, currentIndex } = props;
+    this.makePersent = setPersent;
+    this.currentIndex = currentIndex;
     const requestOptions = this.fileUploaderClientOptions.requestOptions;
-
     if (file) {
       const { md5, chunkList } = await this.getChunkListAndFileMd5(file);
       this.chunkList = chunkList;
       this.tmpList = chunkList;
+      this.sum = chunkList.length;
       this.md5 = md5;
-      console.log(this.chunkList);
+      console.log('this.chunkList', this.chunkList);
     } else {
+      console.log('this.tmpList', this.tmpList);
       this.chunkList = this.tmpList;
     }
 
@@ -155,51 +177,54 @@ export class FileUploaderClient {
       );
     }
 
-    const data = await requestOptions.initFilePartUploadFunc();
+    const data = await requestOptions.initFilePartUploadFunc(this.currentIndex);
     // 妙传逻辑
     if (file && data.quickUpload) {
       console.log('quickUpload');
       return null;
     }
     const uploadArray = [];
-    for (let index = 0; index < this.chunkList.length; index++) {
+    for (let index = 0; index < this.chunkList?.length || 0; index++) {
       uploadArray.push(requestOptions.uploadPartFileFunc);
     }
     console.log('uploadArray', uploadArray);
-    createRequest(uploadArray, 5, this.chunkList)
+    this.createRequest(uploadArray, 5, this.chunkList)
       .then(async (results) => {
-        console.log('retryList', retryList);
+        console.log('retryList', this.retryList);
         for (let retry = 0; retry < requestOptions.retryTimes; retry++) {
-          if (retryList.length > 0) {
+          if (this.retryList?.length > 0) {
             console.log(`retry start, times: ${retry}`);
-            for (let a = 0; a < retryList.length; a++) {
-              const blobIndex = retryList[a];
+            for (let a = 0; a < this.retryList?.length; a++) {
+              const blobIndex = this.retryList[a];
               try {
-                await requestOptions.uploadPartFileFunc(this.chunkList[blobIndex], blobIndex);
-                retryList.splice(a, 1);
+                await requestOptions.uploadPartFileFunc(
+                  this.chunkList[blobIndex],
+                  blobIndex,
+                  this.currentIndex
+                );
+                this.retryList.splice(a, 1);
               } catch (e) {
                 console.warn(`${blobIndex} part retry upload failed, times: ${retry}`);
               }
             }
           }
         }
-
-        if (retryList.length === 0) {
+        if (this.retryList?.length === 0) {
           if (this.abort === 'abort') {
             console.log(this.abort);
             return null;
           } else {
             console.log(this.abort);
-            return await requestOptions.finishFilePartUploadFunc(this.md5);
+            return await requestOptions.finishFilePartUploadFunc(this.md5, this.currentIndex);
           }
         } else {
-          throw Error(`upload failed, some chunks upload failed: ${JSON.stringify(retryList)}`);
+          throw Error(`upload failed, some chunks upload failed: ${JSON.stringify(this.retryList)}`);
         }
       })
       .catch((reason) => {
-        console.log('fail->', results.length);
-        this.chunkList.splice(0, results.length);
-        startIndex = results.length;
+        console.log('fail->', this.startIndex + this.results.length);
+        this.chunkList.splice(0, this.results.length);
+        this.startIndex += this.results.length;
       });
   }
 }
